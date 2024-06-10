@@ -1,0 +1,52 @@
+// Fungsi listfolderSPP utk mengambil nama folder SPP di drive per bulan dan dimasukkan ke google sheets
+
+function listfolderspp() {
+  // Meminta id folder pada bulan yang diinginkan 
+  var mainFolderId = SpreadsheetApp.getUi().prompt('masukkan id folder').getResponseText();
+
+  // cek jika id folder ada/tidak
+  if (mainFolderId) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var s = ss.getActiveSheet();
+    var c = s.getActiveCell();
+
+    // akses ke id folder
+    var mainFolder = DriveApp.getFolderById(mainFolderId);
+
+    if (mainFolder) {
+      // list subfolder yang ada di id folder
+      var subfolders = listfoldersppInFolder(mainFolder);
+
+      // buat nama subfolder (nomor SPP)
+      var names = subfolders.map(function (folder) {
+        return [folder.getUrl(), folder.getName()];
+      });
+      s.getRange(c.getRow(), c.getColumn(), names.length, 2).setValues(names);
+    } else {
+      // kalau id folder pada bulan yang diinginkan tidak ada
+      SpreadsheetApp.getUi().alert('Id yang dimasukkan salah.');
+    }
+  } else {
+    // kalau tidak ada yang diinput ketika id folder diminta
+    SpreadsheetApp.getUi().alert('tidak ada id folder yang dimasukkan.');
+  }
+}
+
+function listfoldersppInFolder(folder) {
+  var subfolders = folder.getFolders();
+  var subfolderList = [];
+
+  while (subfolders.hasNext()) {
+    var subfolder = subfolders.next();
+    subfolderList.push(subfolder);
+  }
+
+  return subfolderList;
+}
+
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('Ambil Folder SPP')
+    .addItem('Jalankan Script', 'listfolderspp')
+    .addToUi();
+}
